@@ -85,7 +85,35 @@ MCP CLI supports all providers and models from CHUK-LLM, including cutting-edge 
 
 ## 🚀 Installation
 
-### Quick Start with Ollama (Default)
+### Quick Start with Docker (Recommended)
+
+The easiest way to get started is with Docker - everything is pre-configured:
+
+```bash
+# Clone and start with Docker
+git clone https://github.com/chrishayuk/mcp-cli
+cd mcp-cli
+cp .env.example .env  # Edit with your API keys if needed
+
+# Start all services (Ollama + MCP servers)
+docker-compose up -d
+
+# Run chat mode (Ollama will auto-download gpt-oss model)
+docker-compose run --rm mcp-cli chat --server sqlite
+
+# Or start interactive shell
+docker-compose run --rm -it mcp-cli shell
+```
+
+Docker setup includes:
+- **Ollama** with gpt-oss reasoning model (auto-downloaded)
+- **SQLite MCP server** with sample database
+- **Optional services** (filesystem, search, monitoring)
+- **Development mode** with live code mounting
+
+See [Docker Guide](docs/DOCKER.md) for advanced usage.
+
+### Manual Installation with Ollama
 
 1. **Install Ollama** (if not already installed):
 ```bash
@@ -117,10 +145,13 @@ mcp-cli --help
 ```bash
 # === LOCAL MODELS (No API Key Required) ===
 
-# Use default reasoning model (gpt-oss)
-mcp-cli --server sqlite
+# Docker (recommended)
+docker-compose run --rm mcp-cli chat --server sqlite                    # Default gpt-oss
+docker-compose run --rm mcp-cli chat --server sqlite --model llama3.3   # Latest Llama
+docker-compose run --rm mcp-cli chat --server sqlite --model qwen2.5-coder # Coding-focused
 
-# Use other Ollama models
+# Native installation
+mcp-cli --server sqlite                # Use default reasoning model (gpt-oss)
 mcp-cli --model llama3.3              # Latest Llama
 mcp-cli --model qwen2.5-coder         # Coding-focused
 mcp-cli --model deepseek-coder        # Another coding model
@@ -128,6 +159,11 @@ mcp-cli --model granite3.3            # IBM Granite
 
 # === CLOUD PROVIDERS (API Keys Required) ===
 
+# Docker with cloud providers (set API keys in .env)
+docker-compose run --rm mcp-cli chat --server sqlite --provider openai --model gpt-5
+docker-compose run --rm mcp-cli chat --server sqlite --provider anthropic --model claude-4-1-opus
+
+# Native with cloud providers
 # GPT-5 Family (requires OpenAI API key)
 mcp-cli --provider openai --model gpt-5          # Full GPT-5 with reasoning
 mcp-cli --provider openai --model gpt-5-mini     # Efficient GPT-5 variant
@@ -153,6 +189,47 @@ mcp-cli --provider azure_openai --model gpt-5    # Enterprise GPT-5
 mcp-cli --provider gemini --model gemini-2.0-flash      # Google Gemini
 mcp-cli --provider groq --model llama-3.1-70b          # Fast Llama via Groq
 ```
+
+## 🐳 Docker Usage
+
+Docker provides the easiest setup with all dependencies included:
+
+### Basic Docker Commands
+
+```bash
+# Start all services
+docker-compose up -d
+
+# Chat mode (most common)
+docker-compose run --rm mcp-cli chat --server sqlite
+
+# Interactive mode
+docker-compose run --rm mcp-cli interactive --server sqlite
+
+# Command mode
+docker-compose run --rm mcp-cli tools --server sqlite
+docker-compose run --rm mcp-cli cmd --server sqlite --tool list_tables
+
+# Development mode with live code editing
+docker-compose --profile development up -d
+docker-compose run --rm mcp-cli-dev chat --server sqlite
+
+# With additional services
+docker-compose --profile filesystem up -d     # Add filesystem server
+docker-compose --profile search up -d         # Add search server  
+docker-compose --profile monitoring up -d     # Add Portainer UI
+```
+
+### Docker Services
+
+- **mcp-cli**: Main application with uv and Python dependencies
+- **ollama**: Local LLM server with gpt-oss model (auto-downloaded)
+- **sqlite-server**: MCP SQLite server with sample database
+- **filesystem-server**: File access server (optional)
+- **brave-search-server**: Web search server (optional)
+- **portainer**: Container management UI (optional)
+
+See [Docker Guide](docs/DOCKER.md) for detailed configuration.
 
 ## 🧰 Global Configuration
 
@@ -855,21 +932,42 @@ pre-commit install
 Explore the UI capabilities powered by chuk-term:
 
 ```bash
-# Terminal management features
+# Docker
+docker-compose run --rm mcp-cli uv run examples/ui_terminal_demo.py
+docker-compose run --rm mcp-cli uv run examples/ui_output_demo.py
+docker-compose run --rm mcp-cli uv run examples/ui_streaming_demo.py
+
+# Native
 uv run examples/ui_terminal_demo.py
-
-# Output system with themes
 uv run examples/ui_output_demo.py
-
-# Streaming UI capabilities
 uv run examples/ui_streaming_demo.py
 ```
 
 ### Running Tests
 
 ```bash
+# Docker
+docker-compose run --rm mcp-cli make test
+docker-compose run --rm mcp-cli make test-cov
+
+# Native
+make test
+make test-cov
+# or
 pytest
 pytest --cov=mcp_cli --cov-report=html
+```
+
+### Development
+
+```bash
+# Docker development mode with live editing
+docker-compose --profile development up -d
+docker-compose run --rm mcp-cli-dev chat --server sqlite
+
+# Native development
+make dev-install
+make check  # Run linting, type checking, and tests
 ```
 
 ## 📜 License
