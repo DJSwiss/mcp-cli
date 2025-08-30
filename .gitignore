@@ -193,3 +193,72 @@ logs/
 
 # UV
 .uv/
+
+# Docker
+.env
+docker-compose.override.local.yml
+*.override.yml
+
+# Docker volumes and data
+data/
+volumes/
+
+# Container logs
+container-logs/
+
+# Local development files
+.local/
+.cache/
+.config/
+
+# IDE and editor files
+.cursor/
+.cursorrules
+*.swp
+*.swo
+.vim/
+.netrwhist
+
+# OS specific
+.fseventsd/
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Runtime files
+*.pid
+*.sock
+
+# Diagnostic outputs
+diagnostics/output/
+diagnostics/results/
+
+# Test artifacts
+test_results/
+.pytest_tmp/
+
+# Local configs that shouldn't be committed
+*local.json
+*local.yaml
+*local.yml
+*.local.*
+
+# Backup files
+*.backup
+*.bck
+
+# Personal notes and scratch files
+NOTES.md
+TODO.md
+SCRATCH.md
+scratch/
+notes/
+
+# Large model files (if any get downloaded locally)
+*.bin
+*.safetensors
+models/
+
+# Development databases
+dev.db
+development.db
+local.db
