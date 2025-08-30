@@ -253,6 +253,9 @@ SCRATCH.md
 scratch/
 notes/
 
+# Claude Code generated files
+CLAUDE.md
+
 # Large model files (if any get downloaded locally)
 *.bin
 *.safetensors
