@@ -126,13 +126,15 @@ uv run examples/ui_streaming_demo.py
 ### Critical Files for Understanding Architecture
 
 - `src/mcp_cli/main.py`: Entry point, command routing, mode selection
-- `src/mcp_cli/llm/model_manager.py`: Provider/model management, defaults handling
-- `src/mcp_cli/tools/tool_manager.py`: Tool discovery, execution, and validation
-- `src/mcp_cli/chat/conversation_processor.py`: Chat conversation flow orchestration
+- `src/mcp_cli/model_manager.py`: Provider/model management, defaults handling  
+- `src/mcp_cli/tools/manager.py`: Tool discovery, execution, and validation
+- `src/mcp_cli/chat/conversation.py`: Chat conversation flow orchestration
 - `src/mcp_cli/cli/registry.py`: Command registration and dispatch system
-- `src/mcp_cli/ui/output.py`: Centralized output management with theme support
-- `src/mcp_cli/ui/terminal.py`: Terminal operations and enhanced features
-- `src/mcp_cli/ui/theme.py`: Theme system and style management
+- `src/mcp_cli/llm/llm_client.py`: LLM provider abstraction layer
+- `src/mcp_cli/llm/tools_handler.py`: Tool execution and validation
+- `src/mcp_cli/tools/validation.py`: Tool schema validation and sanitization
+- `src/mcp_cli/tools/formatting.py`: Tool output formatting and display
+- UI components are provided by the chuk-term library
 
 ### Configuration Management
 

@@ -1,0 +1,50 @@
+# Docker Compose Override for Development
+# This file extends docker-compose.yml for development scenarios
+
+version: '3.8'
+
+services:
+  # Development version with volume mounts for live editing
+  mcp-cli-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: mcp-cli-dev
+    volumes:
+      # Mount source code for live editing
+      - ./src:/app/src
+      - ./server_config.json:/app/server_config.json:ro
+      - ./logs:/app/logs
+      - mcp_dev_data:/app/data
+    environment:
+      - PYTHONPATH=/app/src
+      - LOG_LEVEL=DEBUG
+    profiles:
+      - development
+
+  # Ollama with development models pre-loaded
+  ollama-dev:
+    extends:
+      service: ollama
+    container_name: ollama-dev
+    volumes:
+      - ollama_dev_data:/root/.ollama
+    # Command to pre-pull development models
+    entrypoint: >
+      sh -c "
+      ollama serve &
+      sleep 10 &&
+      ollama pull gpt-oss &&
+      ollama pull llama3.3 &&
+      ollama pull qwen2.5-coder &&
+      wait
+      "
+    profiles:
+      - development
+
+volumes:
+  mcp_dev_data:
+    driver: local
+  ollama_dev_data:
+    driver: local

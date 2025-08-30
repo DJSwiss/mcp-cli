@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  # MCP CLI application
+  mcp-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mcp-cli
+    volumes:
+      # Mount server config
+      - ./server_config.json:/app/server_config.json:ro
+      # Mount data directory for persistence
+      - mcp_data:/app/data
+      # Mount logs directory
+      - ./logs:/app/logs
+    environment:
+      # LLM Provider Configuration
+      - LLM_PROVIDER=ollama
+      - LLM_MODEL=gpt-oss
+      
+      # API Keys (uncomment and set as needed)
+      # - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      # - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      # - GEMINI_API_KEY=${GEMINI_API_KEY}
+      # - GROQ_API_KEY=${GROQ_API_KEY}
+      
+      # MCP Configuration
+      - MCP_TOOL_TIMEOUT=120
+      - CHUK_LLM_CONFIG_PATH=/app/config
+    networks:
+      - mcp-network
+    depends_on:
+      - ollama
+      - sqlite-server
+    # Interactive mode for CLI usage
+    stdin_open: true
+    tty: true
+    profiles:
+      - interactive
+
+  # Ollama service for local LLM inference
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - mcp-network
+    # Pull default model on startup
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # MCP SQLite Server
+  sqlite-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.sqlite-server
+    container_name: mcp-sqlite-server
+    volumes:
+      - ./test.db:/app/database.db
+      - sqlite_data:/app/data
+    environment:
+      - DATABASE_PATH=/app/database.db
+    networks:
+      - mcp-network
+    ports:
+      - "3001:3001"
+
+  # MCP Filesystem Server
+  filesystem-server:
+    image: node:18-alpine
+    container_name: mcp-filesystem-server
+    working_dir: /app
+    volumes:
+      - ./data:/app/data:ro
+      - filesystem_data:/app/shared
+    command: >
+      sh -c "
+      npm install -g @modelcontextprotocol/server-filesystem &&
+      mcp-server-filesystem /app/data
+      "
+    networks:
+      - mcp-network
+    profiles:
+      - filesystem
+
+  # MCP Brave Search Server (optional)
+  brave-search-server:
+    image: node:18-alpine
+    container_name: mcp-brave-search-server
+    working_dir: /app
+    environment:
+      - BRAVE_API_KEY=${BRAVE_API_KEY}
+    command: >
+      sh -c "
+      npm install -g @modelcontextprotocol/server-brave-search &&
+      mcp-server-brave-search
+      "
+    networks:
+      - mcp-network
+    profiles:
+      - search
+
+  # Web UI for monitoring (optional)
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: mcp-portainer
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - mcp-network
+    profiles:
+      - monitoring
+
+networks:
+  mcp-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  mcp_data:
+    driver: local
+  ollama_data:
+    driver: local
+  sqlite_data:
+    driver: local
+  filesystem_data:
+    driver: local
+  portainer_data:
+    driver: local
